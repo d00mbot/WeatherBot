@@ -15,7 +15,7 @@ import (
 )
 
 func InitMongoClient(mongoURI string) (*mongo.Client, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	opt := options.Client().ApplyURI(mongoURI)
@@ -71,6 +71,27 @@ func InsertSubscriber(ctx context.Context, client *mongo.Client, message *tgbota
 	return nil
 }
 
+func CheckUserExist(ctx context.Context, client *mongo.Client, message *tgbotapi.Message) (bool, error) {
+	sub := domain.Subscriber{}
+
+	col := openCollection(client)
+
+	filter := bson.D{{Key: "chatid", Value: message.Chat.ID}}
+
+	subCursor := col.FindOne(ctx, filter)
+
+	if err := subCursor.Decode(&sub); err != nil {
+		log.Errorf("error decoding document into result: %s", err)
+		return false, nil
+	}
+
+	if sub.ChatID != message.From.ID {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 func UpdateUserTime(ctx context.Context, client *mongo.Client, message *tgbotapi.Message, userTime string) error {
 	col := openCollection(client)
 
@@ -90,7 +111,7 @@ func UpdateUserTime(ctx context.Context, client *mongo.Client, message *tgbotapi
 func GetAllSubscribers(client *mongo.Client) ([]domain.Subscriber, error) {
 	subs := []domain.Subscriber{}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	col := openCollection(client)
