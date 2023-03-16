@@ -3,8 +3,8 @@ version: '3.8'
 services:
   bot:
     environment:
-      - WEATHER_TOKEN=b34c07d5728c6c70118dd27815f5e34c
-      - TELEGRAM_TOKEN=5467370473:AAEdpHWrdCRHxdYJJpFjlhi07KYrRZ-lgV4 
+      - WEATHER_TOKEN=YOUR_WEATHER_API_TOKEN
+      - TELEGRAM_TOKEN=YOUR_TELEGRAM_BOT_TOKEN 
       - MONGO_URI=mongodb://mongodb:27017/  
     build:
       context: .
