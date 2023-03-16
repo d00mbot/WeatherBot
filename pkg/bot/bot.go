@@ -46,26 +46,10 @@ func (b *Bot) Start() error {
 			if err := b.handleCommand(update.Message); err != nil {
 				return err
 			}
-		}
-
-		if update.Message.Location != nil {
+		} else {
 			ctx := context.Background()
 
-			if err := b.handleLocationMessage(ctx, update.Message); err != nil {
-				return err
-			}
-		}
-
-		//Handle reply to message with subscriber's time
-		if update.Message.ReplyToMessage != nil {
-			ctx := context.Background()
-
-			if err := b.handleReplyMessage(ctx, update.Message); err != nil {
-				return err
-			}
-			//Handle other non-valid messages
-		} else if !update.Message.IsCommand() && update.Message.Location == nil {
-			if err := b.handleOtherMessage(update.Message); err != nil {
+			if err := b.handleMessage(ctx, update.Message); err != nil {
 				return err
 			}
 		}
