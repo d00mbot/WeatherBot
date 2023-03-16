@@ -1,8 +1,6 @@
 package config
 
 import (
-	"github.com/caarlos0/env"
-	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 
 	log "github.com/sirupsen/logrus"
@@ -10,34 +8,39 @@ import (
 
 type Responses struct {
 	Start          string `mapstructure:"start"`
+	Help           string `mapstructure:"help"`
+	Location       string `mapstructure:"location"`
 	Time           string `mapstructure:"time"`
 	WrongTime      string `mapstructure:"wrong_time"`
 	SuccessfulTime string `mapstructure:"successful_time"`
 	UnknownCommand string `mapstructure:"unknown_command"`
-	Location       string `mapstructure:"location"`
-	OtherMessage   string `mapstructure:"other_message"`
+	DefaultMessage string `mapstructure:"default_message"`
 }
 
 type Config struct {
-	WeatherToken  string `env:"WEATHER_TOKEN"`
-	TelegramToken string `env:"TELEGRAM_TOKEN"`
-	MongoURI      string `env:"MONGO_URI"`
+	WeatherToken  string
+	TelegramToken string
+	MongoURI      string
 
 	Responses Responses
 }
 
-func InitResponses() (*Config, error) {
+func Init() (*Config, error) {
 	if err := setUpViper(); err != nil {
 		return nil, err
 	}
 
-	var rsp Config
+	var cfg Config
 
-	if err := unmarshal(&rsp); err != nil {
+	if err := fromEnv(&cfg); err != nil {
 		return nil, err
 	}
 
-	return &rsp, nil
+	if err := unmarshal(&cfg); err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
 }
 
 func setUpViper() error {
@@ -52,13 +55,13 @@ func setUpViper() error {
 	return nil
 }
 
-func unmarshal(rsp *Config) error {
-	if err := viper.Unmarshal(&rsp); err != nil {
+func unmarshal(cfg *Config) error {
+	if err := viper.Unmarshal(&cfg); err != nil {
 		log.Errorf("error unmarshaling config into a struct: %s", err)
 		return err
 	}
 
-	if err := viper.UnmarshalKey("responses", &rsp); err != nil {
+	if err := viper.UnmarshalKey("responses", &cfg); err != nil {
 		log.Errorf("error unmarshaling key into a struct: %s", err)
 		return err
 	}
@@ -66,20 +69,24 @@ func unmarshal(rsp *Config) error {
 	return nil
 }
 
-func LoadENV(fileName string) (*Config, error) {
-	err := godotenv.Load(fileName)
-	if err != nil {
-		log.Fatalf("unable to load .env file: %s", err)
-		return nil, err
+func fromEnv(cfg *Config) error {
+	if err := viper.BindEnv("telegram_token"); err != nil {
+		log.Errorf("error binding a Viper key to a ENV variable: %s", err)
+		return err
 	}
+	cfg.TelegramToken = viper.GetString("telegram_token")
 
-	cfg := Config{}
-
-	err = env.Parse(&cfg)
-	if err != nil {
-		log.Fatalf("unable to parse .env variables %s: ", err)
-		return nil, err
+	if err := viper.BindEnv("weather_token"); err != nil {
+		log.Errorf("error binding a Viper key to a ENV variable: %s", err)
+		return err
 	}
+	cfg.WeatherToken = viper.GetString("weather_token")
 
-	return &cfg, nil
+	if err := viper.BindEnv("mongo_uri"); err != nil {
+		log.Errorf("error binding a Viper key to a ENV variable: %s", err)
+		return err
+	}
+	cfg.MongoURI = viper.GetString("mongo_uri")
+
+	return nil
 }
