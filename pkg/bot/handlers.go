@@ -12,6 +12,7 @@ import (
 
 const (
 	commandStart = "start"
+	commandHelp  = "help"
 	commandTime  = "time"
 )
 
@@ -25,6 +26,8 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 	switch message.Command() {
 	case commandStart:
 		return b.handleStartCommand(message)
+	case commandHelp:
+		return b.handleHelpCommand(message)
 	case commandTime:
 		return b.handleTimeCommand(message)
 	default:
@@ -38,6 +41,17 @@ func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.Start)
 
 	msg.ReplyMarkup = locationKeyboard
+
+	if _, err := b.bot.Send(msg); err != nil {
+		log.Errorf("error sending message to telegram: %s ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (b *Bot) handleHelpCommand(message *tgbotapi.Message) error {
+	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.Help)
 
 	if _, err := b.bot.Send(msg); err != nil {
 		log.Errorf("error sending message to telegram: %s ", err)
@@ -74,12 +88,23 @@ func (b *Bot) handleUnknownCommand(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (b *Bot) handleOtherMessage(message *tgbotapi.Message) error {
-	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.OtherMessage)
+func (b *Bot) handleMessage(ctx context.Context, message *tgbotapi.Message) error {
+	if message.Location != nil {
+		if err := b.handleLocationMessage(ctx, message); err != nil {
+			return err
+		}
+	}
 
-	if _, err := b.bot.Send(msg); err != nil {
-		log.Errorf("error sending message to telegram: %s ", err)
-		return err
+	if message.ReplyToMessage != nil {
+		if err := b.handleTimeMessage(ctx, message); err != nil {
+			return err
+		}
+	}
+
+	if message.Location == nil && message.ReplyToMessage == nil {
+		if err := b.handleOtherMessages(message); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -100,20 +125,37 @@ func (b *Bot) handleLocationMessage(ctx context.Context, message *tgbotapi.Messa
 	return nil
 }
 
-func (b *Bot) handleReplyMessage(ctx context.Context, message *tgbotapi.Message) error {
+func (b *Bot) handleTimeMessage(ctx context.Context, message *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, "")
 
-	time := ct.CheckTime(message.Text)
+	userExist, _ := database.CheckUserExist(ctx, b.client, message)
 
-	if time == "" {
-		msg.Text = b.responses.WrongTime
+	if !userExist {
+		msg.Text = b.responses.DefaultMessage
 	} else {
-		msg.Text = fmt.Sprintf(b.responses.SuccessfulTime, time)
+		time := ct.CheckTime(message.Text)
 
-		if err := database.UpdateUserTime(ctx, b.client, message, time); err != nil {
-			return err
+		if time == "" {
+			msg.Text = b.responses.WrongTime
+		} else {
+			msg.Text = fmt.Sprintf(b.responses.SuccessfulTime, time)
+
+			if err := database.UpdateUserTime(ctx, b.client, message, time); err != nil {
+				return err
+			}
 		}
 	}
+
+	if _, err := b.bot.Send(msg); err != nil {
+		log.Errorf("error sending message to telegram: %s ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (b *Bot) handleOtherMessages(message *tgbotapi.Message) error {
+	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.DefaultMessage)
 
 	if _, err := b.bot.Send(msg); err != nil {
 		log.Errorf("error sending message to telegram: %s ", err)
