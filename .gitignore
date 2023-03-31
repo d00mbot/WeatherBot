@@ -1,3 +1,5 @@
 *.env
 
 .bin
+
+cmd/app/app.log
