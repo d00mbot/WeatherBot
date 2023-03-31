@@ -10,10 +10,11 @@ import (
 )
 
 type Config struct {
-	WeatherToken  string `env:"WEATHER_TOKEN"`
-	TelegramToken string `env:"TELEGRAM_TOKEN"`
-	MongoURI      string `env:"MONGO_URI"`
-	LogFilePath   string `env:"LOG_FILE_PATH"`
+	WeatherToken       string `env:"WEATHER_TOKEN"`
+	TelegramToken      string `env:"TELEGRAM_TOKEN"`
+	MongoURI           string `env:"MONGO_URI"`
+	LogFilePath        string `env:"LOG_FILE_PATH"`
+	ResponseConfigPath string `env:"RESPONSE_CONFIG_PATH"`
 
 	Response models.Response
 }
@@ -31,24 +32,24 @@ func LoadConfig(logger *zap.SugaredLogger) (*Config, error) {
 		return nil, err
 	}
 
-	if err := setUpViper(logger); err != nil {
-		return nil, err
-	}
-
-	if err := viper.UnmarshalKey("responses", &cfg.Response); err != nil {
-		logger.Errorf("faild to unmarshal responses: %s", err)
+	if err := setUpViper(&cfg, logger); err != nil {
 		return nil, err
 	}
 
 	return &cfg, nil
 }
 
-func setUpViper(logger *zap.SugaredLogger) error {
-	viper.AddConfigPath("../../pkg/config")
+func setUpViper(cfg *Config, logger *zap.SugaredLogger) error {
+	viper.AddConfigPath("../../pkg/config") // i have some question here. Will handle this later (env filepath)
 	viper.SetConfigType("yml")
 
 	if err := viper.ReadInConfig(); err != nil {
 		logger.Errorf("unable to load config file: %s", err)
+		return err
+	}
+
+	if err := viper.UnmarshalKey("responses", &cfg.Response); err != nil {
+		logger.Errorf("faild to unmarshal responses: %s", err)
 		return err
 	}
 
