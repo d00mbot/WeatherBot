@@ -1,0 +1,10 @@
+responses:
+    start: "Welcome! To subscribe for a daily weather forecast push 'Send geolocation' button.\n\nIf an error occurs, check if the telegram has permission to transfer geolocation."
+    help: "Welcome!\nThis bot provides a subscription to daily weather forecast notifications.\n\nTo start a subscription send me /start and follow the instructions.\n\nThe default notification time (08:00) will be saved on the first subscription. If you want to change it send me /time and follow the instructions.\n\nIf you resend the location, the location data will be updated.\n\nIf an error occurs, check if the telegram has permission to transfer geolocation"
+    time: "Send me desired time from 00 to 23. You can only choose the hours.\nFor example: 08 corresponds to 08:00 etc."
+    wrong_time: "Wrong /time format. Lets try again.\nYou can choose only the hours from 00 to 23"
+    successful_time: "New time successfully saved.\nIf you want to change it send me /time.\n\nCongratulations! You will receive weather forecast notifications every day at %s:00"
+    location: "Your subscription has been completed!\n\nYou will receive weather forecast notifications every day at 08:00 (Default).\nIf you want to change it send me /time and follow the instructions."
+    location_update: "Location data is successfuly updated.\nIf you want to update notifications time send me /time and follow the instructions."
+    unknown_command: "I dont know that command"
+    default_message: "To start subscription send me /start"
