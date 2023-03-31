@@ -10,8 +10,7 @@ FROM alpine:latest
 
 WORKDIR /root/
 
-COPY --from=0 /subscription-bot/.bin/bot .
-COPY --from=0 /subscription-bot/cmd/app/configs configs/
+COPY --from=0 /subscription-bot/.bin/bot . 
 
 EXPOSE 8080
 
