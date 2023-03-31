@@ -2,35 +2,49 @@ package bot
 
 import (
 	"context"
-	config "subscription-bot/pkg/config"
+	"subscription-bot/pkg/api"
+	"subscription-bot/pkg/container"
+	"subscription-bot/pkg/database"
+	"subscription-bot/pkg/domain/models"
 
 	"go.mongodb.org/mongo-driver/mongo"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	log "github.com/sirupsen/logrus"
 )
 
 type Bot struct {
-	bot          *tgbotapi.BotAPI
-	client       *mongo.Client
-	weatherToken string
-	responses    config.Responses
+	bot       *tgbotapi.BotAPI
+	storage   database.UserStorageService
+	client    *mongo.Client
+	responses models.Response
+	container container.BotContainer
+	request   api.RequestWeatherService
 }
 
-func Newbot(bot *tgbotapi.BotAPI, client *mongo.Client, weatherToken string, responses config.Responses) *Bot {
+func Newbot(
+	bot *tgbotapi.BotAPI,
+	st database.UserStorageService,
+	cli *mongo.Client,
+	resp models.Response,
+	c container.BotContainer,
+	r api.RequestWeatherService) *Bot {
+
 	return &Bot{
-		bot:          bot,
-		client:       client,
-		weatherToken: weatherToken,
-		responses:    responses,
+		bot:       bot,
+		storage:   st,
+		client:    cli,
+		responses: resp,
+		container: c,
+		request:   r,
 	}
 }
 
 func (b *Bot) Start() error {
-	log.Infof("Authorized on account %s", b.bot.Self.UserName)
+	logger := b.container.GetLogger()
+	logger.Infof("Authorized on account %s", b.bot.Self.UserName)
 
 	go b.initScheduler()
-	log.Info("Scheduler is started")
+	logger.Info("Scheduler is started")
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -54,5 +68,6 @@ func (b *Bot) Start() error {
 			}
 		}
 	}
+
 	return nil
 }
