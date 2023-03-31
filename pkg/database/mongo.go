@@ -5,127 +5,169 @@ import (
 	"time"
 
 	api "subscription-bot/pkg/api"
-	domain "subscription-bot/pkg/domain"
+	"subscription-bot/pkg/config"
+	"subscription-bot/pkg/container"
+	"subscription-bot/pkg/domain/models"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func InitMongoClient(mongoURI string) (*mongo.Client, error) {
+const (
+	dbName         = "weathersubscribers"
+	collectionName = "subscribers"
+)
+
+type MongoStorageService struct {
+	container container.BotContainer
+	request   api.RequestWeatherService
+}
+
+func NewMongoStorageService(c container.BotContainer, r api.RequestWeatherService) MongoStorageService {
+	return MongoStorageService{container: c, request: r}
+}
+
+func (m *MongoStorageService) initMongoClient(cfg *config.Config) (*mongo.Client, error) {
+	logger := m.container.GetLogger()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	opt := options.Client().ApplyURI(mongoURI)
+	opt := options.Client().ApplyURI(cfg.MongoURI)
 
 	client, err := mongo.NewClient(opt)
 	if err != nil {
-		log.Errorf("error creating new mongo client: %s", err)
+		logger.Errorf("error creating new mongo client: %s", err)
 		return nil, err
 	}
 
 	err = client.Connect(ctx)
 	if err != nil {
-		log.Errorf("unable to create mongo client connection: %s ", err)
+		logger.Errorf("unable to create mongo client connection: %s ", err)
 		return nil, err
 	}
-	log.Infof("Successfully connected to mongoDB")
+	logger.Info("Successfully connected to mongoDB")
 
 	return client, nil
 }
 
 func openCollection(client *mongo.Client) *mongo.Collection {
-	collection := client.Database("weathersubscribers").Collection("subscribers")
+	collection := client.Database(dbName).Collection(collectionName)
 
 	return collection
 }
 
-func InsertSubscriber(ctx context.Context, client *mongo.Client, message *tgbotapi.Message, weatherToken string) error {
+func (m *MongoStorageService) createUser(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message, cfg *config.Config) error {
+	logger := m.container.GetLogger()
+
 	col := openCollection(client)
 
-	timezone, err := api.GetUserTimezone(message, weatherToken)
+	timezone, err := m.request.RequestTimezone(msg, cfg)
 	if err != nil {
-		log.Errorf("error inserting user's timezone: %s", err)
+		logger.Errorf("faild to get user's timezone: %s", err)
 		return err
 	}
 
-	filter := bson.D{{Key: "chatid", Value: message.Chat.ID}}
+	user := models.NewUser(msg.From.ID, msg.Location.Latitude, msg.Location.Longitude, timezone)
 
-	update := bson.D{{Key: "$set", Value: bson.D{
-		{Key: "latitude", Value: message.Location.Latitude},
-		{Key: "longitude", Value: message.Location.Longitude},
-		{Key: "timezone", Value: timezone},
-		{Key: "time", Value: "08:00"},
-	}}}
-
-	opt := options.Update().SetUpsert(true)
-
-	if _, err = col.UpdateOne(ctx, filter, update, opt); err != nil {
-		log.Errorf("error inserting subscriber's data: %s", err)
-		return err
+	if _, err := col.InsertOne(ctx, user); err != nil {
+		logger.Errorf("faild to insert new user: %s", err)
 	}
-	log.Info("Subscriber's data successfully saved")
 
 	return nil
 }
 
-func CheckUserExist(ctx context.Context, client *mongo.Client, message *tgbotapi.Message) (bool, error) {
-	sub := domain.Subscriber{}
+func (m *MongoStorageService) updateUser(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message, cfg *config.Config) error {
+	logger := m.container.GetLogger()
+
+	col := openCollection(client)
+
+	timezone, err := m.request.RequestTimezone(msg, cfg)
+	if err != nil {
+		logger.Errorf("error inserting user's timezone: %s", err)
+		return err
+	}
+
+	filter := bson.D{{Key: "chatid", Value: msg.Chat.ID}}
+
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "latitude", Value: msg.Location.Latitude},
+		{Key: "longitude", Value: msg.Location.Longitude},
+		{Key: "timezone", Value: timezone},
+	}}}
+
+	if _, err = col.UpdateOne(ctx, filter, update); err != nil {
+		logger.Errorf("faild to update user's location data: %s", err)
+		return err
+	}
+	logger.Info("Subscriber's location data successfully updated")
+
+	return nil
+}
+
+func (m *MongoStorageService) checkUserExist(ctx context.Context, client *mongo.Client, message *tgbotapi.Message) (bool, error) {
+	logger := m.container.GetLogger()
+
+	var u models.User
 
 	col := openCollection(client)
 
 	filter := bson.D{{Key: "chatid", Value: message.Chat.ID}}
 
-	subCursor := col.FindOne(ctx, filter)
+	userCursor := col.FindOne(ctx, filter)
 
-	if err := subCursor.Decode(&sub); err != nil {
-		log.Errorf("error decoding document into result: %s", err)
+	if err := userCursor.Decode(&u); err != nil {
+		logger.Errorf("error decoding document into result: %s", err)
 		return false, nil
 	}
 
-	if sub.ChatID != message.From.ID {
+	if u.ChatID != message.From.ID {
 		return false, nil
 	}
 
 	return true, nil
 }
 
-func UpdateUserTime(ctx context.Context, client *mongo.Client, message *tgbotapi.Message, userTime string) error {
+func (m *MongoStorageService) updateUserTime(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message, userTime string) error {
+	logger := m.container.GetLogger()
+
 	col := openCollection(client)
 
-	filter := bson.D{{Key: "chatid", Value: message.Chat.ID}}
+	filter := bson.D{{Key: "chatid", Value: msg.Chat.ID}}
 
 	upd := bson.D{{Key: "$set", Value: bson.D{{Key: "time", Value: userTime + ":00"}}}}
 
 	if _, err := col.UpdateOne(ctx, filter, upd); err != nil {
-		log.Errorf("error inseting user's time: %s", err)
+		logger.Errorf("faild to update user's time: %s", err)
 		return err
 	}
-	log.Info("Subscriber's time successfully updated")
+	logger.Info("Subscriber's time successfully updated")
 
 	return nil
 }
 
-func GetAllSubscribers(client *mongo.Client) ([]domain.Subscriber, error) {
-	subs := []domain.Subscriber{}
+func (m *MongoStorageService) getAllUsers(client *mongo.Client) ([]models.User, error) {
+	logger := m.container.GetLogger()
+
+	var users []models.User
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	col := openCollection(client)
 
-	subCursor, err := col.Find(ctx, bson.D{})
+	usersCursor, err := col.Find(ctx, bson.D{})
 	if err != nil {
-		log.Errorf("error trying to find matching documents from collection: %s", err)
+		logger.Errorf("faild to find documents in collection: %s", err)
 		return nil, err
 	}
 
-	if err = subCursor.All(ctx, &subs); err != nil {
-		log.Errorf("error decoding documents into result: %s", err)
+	if err = usersCursor.All(ctx, &users); err != nil {
+		logger.Errorf("error decoding documents into result: %s", err)
 		return nil, err
 	}
 
-	return subs, nil
+	return users, nil
 }
