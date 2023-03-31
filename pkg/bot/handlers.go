@@ -3,22 +3,22 @@ package bot
 import (
 	"context"
 	"fmt"
-	database "subscription-bot/pkg/database"
 	ct "subscription-bot/pkg/time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
-	commandStart = "start"
-	commandHelp  = "help"
-	commandTime  = "time"
+	commandStart          = "start"
+	commandHelp           = "help"
+	commandTime           = "time"
+	locationButtonUnicode = 0x1F30E
+	placeholderText       = "00 - 23"
 )
 
 var locationKeyboard = tgbotapi.NewReplyKeyboard(
 	tgbotapi.NewKeyboardButtonRow(
-		tgbotapi.NewKeyboardButtonLocation(string([]rune{0x1F30E}) + "Send geolocation"),
+		tgbotapi.NewKeyboardButtonLocation(string([]rune{locationButtonUnicode}) + "Send geolocation"),
 	),
 )
 
@@ -38,12 +38,14 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
+	logger := b.container.GetLogger()
+
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.Start)
 
 	msg.ReplyMarkup = locationKeyboard
 
 	if _, err := b.bot.Send(msg); err != nil {
-		log.Errorf("error sending message to telegram: %s ", err)
+		logger.Errorf("error sending message to telegram: %s ", err)
 		return err
 	}
 
@@ -51,10 +53,12 @@ func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) handleHelpCommand(message *tgbotapi.Message) error {
+	logger := b.container.GetLogger()
+
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.Help)
 
 	if _, err := b.bot.Send(msg); err != nil {
-		log.Errorf("error sending message to telegram: %s ", err)
+		logger.Errorf("error sending message to telegram: %s ", err)
 		return err
 	}
 
@@ -62,15 +66,17 @@ func (b *Bot) handleHelpCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) handleTimeCommand(message *tgbotapi.Message) error {
+	logger := b.container.GetLogger()
+
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.Time)
 	msg.ReplyToMessageID = message.MessageID
 	msg.ReplyMarkup = tgbotapi.ForceReply{
 		ForceReply:            true,
-		InputFieldPlaceholder: "00 - 23",
+		InputFieldPlaceholder: placeholderText,
 	}
 
 	if _, err := b.bot.Send(msg); err != nil {
-		log.Errorf("error sending message to telegram: %s ", err)
+		logger.Errorf("error sending message to telegram: %s ", err)
 		return err
 	}
 
@@ -78,10 +84,12 @@ func (b *Bot) handleTimeCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) handleUnknownCommand(message *tgbotapi.Message) error {
+	logger := b.container.GetLogger()
+
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.UnknownCommand)
 
 	if _, err := b.bot.Send(msg); err != nil {
-		log.Errorf("error sending message to telegram: %s ", err)
+		logger.Errorf("error sending message to telegram: %s ", err)
 		return err
 	}
 
@@ -111,14 +119,31 @@ func (b *Bot) handleMessage(ctx context.Context, message *tgbotapi.Message) erro
 }
 
 func (b *Bot) handleLocationMessage(ctx context.Context, message *tgbotapi.Message) error {
-	if err := database.InsertSubscriber(ctx, b.client, message, b.weatherToken); err != nil {
+	logger := b.container.GetLogger()
+
+	msg := tgbotapi.NewMessage(message.Chat.ID, "")
+
+	userExist, err := b.storage.CheckExist(ctx, b.client, message)
+	if err != nil {
 		return err
 	}
 
-	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.Location)
+	if !userExist {
+		err := b.storage.Create(ctx, b.client, message, b.container.GetConfig())
+		if err != nil {
+			return err
+		}
+		msg.Text = b.responses.Location
+	} else {
+		err := b.storage.Update(ctx, b.client, message, b.container.GetConfig())
+		if err != nil {
+			return err
+		}
+		msg.Text = b.responses.LocationUpdate
+	}
 
 	if _, err := b.bot.Send(msg); err != nil {
-		log.Errorf("error sending message to telegram: %s ", err)
+		logger.Errorf("error sending message to telegram: %s ", err)
 		return err
 	}
 
@@ -126,9 +151,14 @@ func (b *Bot) handleLocationMessage(ctx context.Context, message *tgbotapi.Messa
 }
 
 func (b *Bot) handleTimeMessage(ctx context.Context, message *tgbotapi.Message) error {
+	logger := b.container.GetLogger()
+
 	msg := tgbotapi.NewMessage(message.Chat.ID, "")
 
-	userExist, _ := database.CheckUserExist(ctx, b.client, message)
+	userExist, err := b.storage.CheckExist(ctx, b.client, message)
+	if err != nil {
+		return err
+	}
 
 	if !userExist {
 		msg.Text = b.responses.DefaultMessage
@@ -140,14 +170,14 @@ func (b *Bot) handleTimeMessage(ctx context.Context, message *tgbotapi.Message) 
 		} else {
 			msg.Text = fmt.Sprintf(b.responses.SuccessfulTime, time)
 
-			if err := database.UpdateUserTime(ctx, b.client, message, time); err != nil {
+			if err := b.storage.UpdateTime(ctx, b.client, message, time); err != nil {
 				return err
 			}
 		}
 	}
 
 	if _, err := b.bot.Send(msg); err != nil {
-		log.Errorf("error sending message to telegram: %s ", err)
+		logger.Errorf("error sending message to telegram: %s ", err)
 		return err
 	}
 
@@ -155,10 +185,12 @@ func (b *Bot) handleTimeMessage(ctx context.Context, message *tgbotapi.Message) 
 }
 
 func (b *Bot) handleOtherMessages(message *tgbotapi.Message) error {
+	logger := b.container.GetLogger()
+
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.DefaultMessage)
 
 	if _, err := b.bot.Send(msg); err != nil {
-		log.Errorf("error sending message to telegram: %s ", err)
+		logger.Errorf("error sending message to telegram: %s ", err)
 		return err
 	}
 
