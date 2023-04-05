@@ -4,13 +4,16 @@ COPY . /subscription-bot
 WORKDIR /subscription-bot
 
 RUN go mod download
-RUN GOOS=linux go build -o ./.bin/bot cmd/app/main.go
+RUN GOOS=linux go build -o ./.bin/bot cmd/main.go
 
 FROM alpine:latest
 
 WORKDIR /root/
 
-COPY --from=0 /subscription-bot/.bin/bot . 
+COPY --from=0 /subscription-bot/.bin/bot .
+COPY --from=0 /subscription-bot/.bin/bot/config /config
+COPY --from=0 /subscription-bot/.bin/bot/container /container
+COPY --from=0 /subscription-bot/.bin/bot/logger /logger 
 
 EXPOSE 8080
 
