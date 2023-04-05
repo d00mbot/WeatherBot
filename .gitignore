@@ -2,4 +2,4 @@
 
 .bin
 
-cmd/app/app.log
+*.log
