@@ -10,41 +10,38 @@ import (
 	_ "time/tzdata"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	log "github.com/sirupsen/logrus"
 )
 
 func main() {
-	// log, err := logger.NewLogger()
-	// if err != nil {
-	// 	return
-	// }
-
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Errorf("failed to load config: %s", err)
 		return
 	}
 
-	responses, err := config.LoadResponses(cfg)
+	logger, err := logger.NewBotLogger(cfg)
 	if err != nil {
 		return
 	}
 
-	logger, err := logger.LoadLogger(cfg)
+	responses, err := config.LoadResponses(cfg, logger)
 	if err != nil {
-		log.Errorf("faild to load logger: %s", err)
 		return
 	}
 
 	container := container.NewBotContainer(cfg, logger)
 
-	weatherStorage := api.NewWeatherStorageService(container)
+	forecastService := api.NewForecastService(container)
 
-	weatherService := api.NewWeatherService(weatherStorage)
+	weatherService := api.NewWeatherService(forecastService)
 
 	mongoStorage := database.NewMongoStorageService(container, weatherService)
 
 	userStorage := database.NewUserStorageService(mongoStorage)
+
+	client, err := database.NewMongoClient(container)
+	if err != nil {
+		return
+	}
 
 	botApi, err := tgbotapi.NewBotAPI(container.GetConfig().TelegramToken)
 	if err != nil {
@@ -53,12 +50,7 @@ func main() {
 	}
 	botApi.Debug = true
 
-	client, err := database.NewMongoClient(container)
-	if err != nil {
-		return
-	}
-
-	bot := bot.Newbot(botApi, userStorage, client, responses, container, weatherService)
+	bot := bot.Newbot(botApi, client, userStorage, weatherService, container, responses)
 
 	if err := bot.Start(); err != nil {
 		logger.Errorf("unable to start bot: %s", err)
