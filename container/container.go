@@ -7,20 +7,20 @@ import (
 )
 
 type container struct {
-	config *config.Config
+	config *config.BotConfig
 	logger *zap.SugaredLogger
 }
 
 type BotContainer interface {
-	GetConfig() *config.Config
+	GetConfig() *config.BotConfig
 	GetLogger() *zap.SugaredLogger
 }
 
-func NewBotContainer(cfg *config.Config, log *zap.SugaredLogger) BotContainer {
+func NewBotContainer(cfg *config.BotConfig, log *zap.SugaredLogger) BotContainer {
 	return &container{config: cfg, logger: log}
 }
 
-func (c *container) GetConfig() *config.Config {
+func (c *container) GetConfig() *config.BotConfig {
 	return c.config
 }
 
