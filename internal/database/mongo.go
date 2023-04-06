@@ -113,8 +113,6 @@ func (ms *MongoStorageService) updateUser(ctx context.Context, client *mongo.Cli
 }
 
 func (ms *MongoStorageService) checkUserExist(ctx context.Context, client *mongo.Client, message *tgbotapi.Message) (bool, error) {
-	logger := ms.container.GetLogger()
-
 	var u models.User
 
 	col := openCollection(client)
@@ -125,10 +123,10 @@ func (ms *MongoStorageService) checkUserExist(ctx context.Context, client *mongo
 
 	if err := userCursor.Decode(&u); err != nil {
 		if err == mongo.ErrNoDocuments {
-			logger.Infof("faild to find matching document: %s", err)
+			ms.container.GetLogger().Infof("faild to find matching document: %s", err)
 			return false, err
 		}
-		logger.Errorf("faild to decode document into result: %s", err)
+		ms.container.GetLogger().Errorf("faild to decode document into result: %s", err)
 		return false, err
 	}
 
@@ -140,7 +138,6 @@ func (ms *MongoStorageService) checkUserExist(ctx context.Context, client *mongo
 }
 
 func (ms *MongoStorageService) updateUserTime(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message, userTime string) error {
-	logger := ms.container.GetLogger()
 	col := openCollection(client)
 
 	filter := bson.D{{Key: "chatid", Value: msg.Chat.ID}}
@@ -149,17 +146,15 @@ func (ms *MongoStorageService) updateUserTime(ctx context.Context, client *mongo
 
 	_, err := col.UpdateOne(ctx, filter, upd)
 	if err != nil {
-		logger.Errorf("faild to update user's time: %s", err)
+		ms.container.GetLogger().Errorf("faild to update user's time: %s", err)
 		return err
 	}
-	logger.Info("Subscriber's time successfully updated")
+	ms.container.GetLogger().Info("Subscriber's time successfully updated")
 
 	return nil
 }
 
 func (ms *MongoStorageService) getAllUsers(client *mongo.Client) ([]models.User, error) {
-	logger := ms.container.GetLogger()
-
 	var users []models.User
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -169,12 +164,12 @@ func (ms *MongoStorageService) getAllUsers(client *mongo.Client) ([]models.User,
 
 	usersCursor, err := col.Find(ctx, bson.D{})
 	if err != nil {
-		logger.Errorf("faild to find documents in collection: %s", err)
+		ms.container.GetLogger().Errorf("faild to find documents in collection: %s", err)
 		return nil, err
 	}
 
 	if err = usersCursor.All(ctx, &users); err != nil {
-		logger.Errorf("faild to decode documents into result: %s", err)
+		ms.container.GetLogger().Errorf("faild to decode documents into result: %s", err)
 		return nil, err
 	}
 
