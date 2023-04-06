@@ -14,28 +14,29 @@ import (
 
 type Bot struct {
 	bot            *tgbotapi.BotAPI
-	storage        database.UserStorageService
 	client         *mongo.Client
-	responses      *models.Responses
-	container      container.BotContainer
+	storage        database.UserStorageService
 	weatherService api.WeatherService
+	container      container.BotContainer
+	responses      *models.Responses
 }
 
 func Newbot(
 	bot *tgbotapi.BotAPI,
-	storage database.UserStorageService,
 	client *mongo.Client,
-	responses *models.Responses,
+	storage database.UserStorageService,
+	weatherService api.WeatherService,
 	container container.BotContainer,
-	weatherService api.WeatherService) *Bot {
+	responses *models.Responses,
+) *Bot {
 
 	return &Bot{
 		bot:            bot,
-		storage:        storage,
 		client:         client,
-		responses:      responses,
-		container:      container,
+		storage:        storage,
 		weatherService: weatherService,
+		container:      container,
+		responses:      responses,
 	}
 }
 
