@@ -56,11 +56,9 @@ func (b *Bot) sendScheduledMessage() error {
 }
 
 func (b *Bot) sendForecast(lat float64, lon float64, chatID int64) error {
-	logger := b.container.GetLogger()
-
 	forecast, _, err := b.weatherService.GetForecast(lat, lon)
 	if err != nil {
-		logger.Errorf("faild to create weather forecast message: %s", err)
+		b.container.GetLogger().Errorf("faild to create weather forecast message: %s", err)
 		return err
 	}
 
@@ -68,7 +66,7 @@ func (b *Bot) sendForecast(lat float64, lon float64, chatID int64) error {
 
 	_, err = b.bot.Send(msg)
 	if err != nil {
-		logger.Errorf("faild to send message to telegram: %s ", err)
+		b.container.GetLogger().Errorf("faild to send message to telegram: %s ", err)
 		return err
 	}
 
