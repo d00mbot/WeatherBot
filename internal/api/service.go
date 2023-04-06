@@ -12,16 +12,16 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type WeatherServiceStorage struct {
+type forecastService struct {
 	container container.BotContainer
 }
 
-func NewWeatherServiceStorage(c container.BotContainer) WeatherServiceStorage {
-	return WeatherServiceStorage{container: c}
+func NewForecastService(c container.BotContainer) forecastService {
+	return forecastService{container: c}
 }
 
-func (w *WeatherServiceStorage) getWeatherForecast(lat float64, lon float64) (string, string, error) {
-	logger := w.container.GetLogger()
+func (fs *forecastService) getWeatherForecast(lat float64, lon float64) (string, string, error) {
+	logger := fs.container.GetLogger()
 
 	if err := validateGeopoints(lat, lon); err != nil {
 		logger.Errorf("faild to get weather forecast: %s", err)
@@ -31,7 +31,7 @@ func (w *WeatherServiceStorage) getWeatherForecast(lat float64, lon float64) (st
 	response, err := http.Get(fmt.Sprintf("https://api.openweathermap.org/data/3.0/onecall?lat=%f&lon=%f&exclude=current,minutely,hourly,alerts&units=metric&appid=%s",
 		lat,
 		lon,
-		w.container.GetConfig().WeatherToken))
+		fs.container.GetConfig().WeatherToken))
 	if err != nil {
 		logger.Errorf("faild to get weather api response: %s", err)
 		return "", "", err
@@ -84,10 +84,10 @@ func generateForecast(w models.Weather) string {
 	return forecast
 }
 
-func (w *WeatherServiceStorage) getUserTimezone(message *tgbotapi.Message) (string, error) {
-	_, timezone, err := w.getWeatherForecast(message.Location.Latitude, message.Location.Longitude)
+func (fs *forecastService) getUserTimezone(message *tgbotapi.Message) (string, error) {
+	_, timezone, err := fs.getWeatherForecast(message.Location.Latitude, message.Location.Longitude)
 	if err != nil {
-		w.container.GetLogger().Errorf("faild to get user's timezone: %s", err)
+		fs.container.GetLogger().Errorf("faild to get user's timezone: %s", err)
 		return "", err
 	}
 
