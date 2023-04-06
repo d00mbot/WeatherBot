@@ -40,11 +40,10 @@ func Newbot(
 }
 
 func (b *Bot) Start() error {
-	logger := b.container.GetLogger()
-	logger.Infof("Authorized on account %s", b.bot.Self.UserName)
+	b.container.GetLogger().Infof("Authorized on account %s", b.bot.Self.UserName)
 
 	go b.startScheduler()
-	logger.Info("Scheduler is started")
+	b.container.GetLogger().Info("Scheduler is started")
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
