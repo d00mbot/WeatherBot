@@ -10,7 +10,8 @@ import (
 func LoadResponses(cfg *BotConfig, logger *zap.SugaredLogger) (*models.Responses, error) {
 	var rsp models.Responses
 
-	if err := setUpViper(cfg, logger); err != nil {
+	if err := setUpViper(cfg); err != nil {
+		logger.Errorf("unable to load responses config file: %s", err)
 		return nil, err
 	}
 
@@ -22,13 +23,12 @@ func LoadResponses(cfg *BotConfig, logger *zap.SugaredLogger) (*models.Responses
 	return &rsp, nil
 }
 
-func setUpViper(cfg *BotConfig, logger *zap.SugaredLogger) error {
+func setUpViper(cfg *BotConfig) error {
 	viper.AddConfigPath(cfg.ResponsesConfigPath)
 	viper.SetConfigName("responses")
 	viper.SetConfigType("yml")
 
 	if err := viper.ReadInConfig(); err != nil {
-		logger.Errorf("unable to load responses config file: %s", err)
 		return err
 	}
 
