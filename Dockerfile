@@ -11,9 +11,9 @@ FROM alpine:latest
 WORKDIR /root/
 
 COPY --from=0 /subscription-bot/.bin/bot .
-COPY --from=0 /subscription-bot/.bin/bot/config /config
-COPY --from=0 /subscription-bot/.bin/bot/container /container
-COPY --from=0 /subscription-bot/.bin/bot/logger /logger 
+COPY --from=0 /subscription-bot/config /config
+COPY --from=0 /subscription-bot/container /container
+COPY --from=0 /subscription-bot/logger /logger 
 
 EXPOSE 8080
 
