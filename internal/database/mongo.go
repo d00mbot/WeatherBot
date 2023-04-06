@@ -20,13 +20,13 @@ const (
 	defaultTime           = "08:00"
 )
 
-type MongoStorageService struct {
+type mongoStorageService struct {
 	container      container.BotContainer
 	weatherService api.WeatherService
 }
 
-func NewMongoStorageService(c container.BotContainer, ws api.WeatherService) MongoStorageService {
-	return MongoStorageService{container: c, weatherService: ws}
+func NewMongoStorageService(c container.BotContainer, ws api.WeatherService) mongoStorageService {
+	return mongoStorageService{container: c, weatherService: ws}
 }
 
 func NewMongoClient(c container.BotContainer) (*mongo.Client, error) {
@@ -58,7 +58,7 @@ func openCollection(client *mongo.Client) *mongo.Collection {
 	return collection
 }
 
-func (ms *MongoStorageService) createUser(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message) error {
+func (ms *mongoStorageService) createUser(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message) error {
 	logger := ms.container.GetLogger()
 	col := openCollection(client)
 
@@ -84,7 +84,7 @@ func (ms *MongoStorageService) createUser(ctx context.Context, client *mongo.Cli
 	return nil
 }
 
-func (ms *MongoStorageService) updateUser(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message) error {
+func (ms *mongoStorageService) updateUser(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message) error {
 	logger := ms.container.GetLogger()
 	col := openCollection(client)
 
@@ -112,7 +112,7 @@ func (ms *MongoStorageService) updateUser(ctx context.Context, client *mongo.Cli
 	return nil
 }
 
-func (ms *MongoStorageService) checkUserExist(ctx context.Context, client *mongo.Client, message *tgbotapi.Message) (bool, error) {
+func (ms *mongoStorageService) checkUserExist(ctx context.Context, client *mongo.Client, message *tgbotapi.Message) (bool, error) {
 	var u models.User
 
 	col := openCollection(client)
@@ -137,7 +137,7 @@ func (ms *MongoStorageService) checkUserExist(ctx context.Context, client *mongo
 	return true, nil
 }
 
-func (ms *MongoStorageService) updateUserTime(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message, userTime string) error {
+func (ms *mongoStorageService) updateUserTime(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message, userTime string) error {
 	col := openCollection(client)
 
 	filter := bson.D{{Key: "chatid", Value: msg.Chat.ID}}
@@ -154,7 +154,7 @@ func (ms *MongoStorageService) updateUserTime(ctx context.Context, client *mongo
 	return nil
 }
 
-func (ms *MongoStorageService) getAllUsers(client *mongo.Client) ([]models.User, error) {
+func (ms *mongoStorageService) getAllUsers(client *mongo.Client) ([]models.User, error) {
 	var users []models.User
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
