@@ -9,7 +9,7 @@ import (
 )
 
 type userStorageService struct {
-	storage MongoStorageService
+	storage mongoStorageService
 }
 
 type UserStorageService interface {
@@ -20,7 +20,7 @@ type UserStorageService interface {
 	FindAll(client *mongo.Client) ([]models.User, error)
 }
 
-func NewUserStorageService(m MongoStorageService) UserStorageService {
+func NewUserStorageService(m mongoStorageService) UserStorageService {
 	return &userStorageService{storage: m}
 }
 
