@@ -5,7 +5,7 @@ import (
 )
 
 type weatherService struct {
-	service WeatherStorageService
+	service WeatherServiceStorage
 }
 
 type WeatherService interface {
@@ -13,7 +13,7 @@ type WeatherService interface {
 	GetTimezone(message *tgbotapi.Message) (string, error)
 }
 
-func NewWeatherService(ws WeatherStorageService) WeatherService {
+func NewWeatherService(ws WeatherServiceStorage) WeatherService {
 	return &weatherService{service: ws}
 }
 
