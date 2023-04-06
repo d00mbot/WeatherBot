@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"subscription-bot/internal/models"
 	"time"
 
 	"github.com/go-co-op/gocron"
@@ -13,26 +14,23 @@ func (b *Bot) startScheduler() {
 	ns := gocron.NewScheduler(time.UTC)
 
 	ns.Every(1).Hour().Do(func() {
-		b.sendScheduledMessage()
+		users, err := b.storage.FindAll(b.client)
+		if err != nil {
+			return
+		}
+
+		b.sendScheduledMessage(users)
 	})
 	ns.StartAsync()
 }
 
-func (b *Bot) sendScheduledMessage() error {
-	logger := b.container.GetLogger()
-
-	users, err := b.storage.FindAll(b.client)
-	if err != nil {
-		logger.Errorf("faild to get all users: %s", err)
-		return err
-	}
-
+func (b *Bot) sendScheduledMessage(users []models.User) error {
 	for _, user := range users {
 		u := user
 
 		userLocation, err := time.LoadLocation(u.Timezone)
 		if err != nil {
-			logger.Errorf("faild to load location: %s", err)
+			b.container.GetLogger().Errorf("faild to load location: %s", err)
 			return err
 		}
 
@@ -40,7 +38,7 @@ func (b *Bot) sendScheduledMessage() error {
 
 		userTime, err := time.Parse(timeLayout, u.Time)
 		if err != nil {
-			logger.Errorf("faild to parse time: %s", err)
+			b.container.GetLogger().Errorf("faild to parse time: %s", err)
 			return err
 		}
 
