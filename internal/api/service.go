@@ -12,15 +12,15 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type WeatherStorageService struct {
+type WeatherServiceStorage struct {
 	container container.BotContainer
 }
 
-func NewWeatherStorageService(c container.BotContainer) WeatherStorageService {
-	return WeatherStorageService{container: c}
+func NewWeatherServiceStorage(c container.BotContainer) WeatherServiceStorage {
+	return WeatherServiceStorage{container: c}
 }
 
-func (w *WeatherStorageService) getWeatherForecast(lat float64, lon float64) (string, string, error) {
+func (w *WeatherServiceStorage) getWeatherForecast(lat float64, lon float64) (string, string, error) {
 	logger := w.container.GetLogger()
 
 	if err := validateGeopoints(lat, lon); err != nil {
@@ -84,13 +84,12 @@ func generateForecast(w models.Weather) string {
 	return forecast
 }
 
-func (w *WeatherStorageService) getUserTimezone(message *tgbotapi.Message) (string, error) {
-	logger := w.container.GetLogger()
-
+func (w *WeatherServiceStorage) getUserTimezone(message *tgbotapi.Message) (string, error) {
 	_, timezone, err := w.getWeatherForecast(message.Location.Latitude, message.Location.Longitude)
 	if err != nil {
-		logger.Errorf("faild to get user's timezone: %s", err)
+		w.container.GetLogger().Errorf("faild to get user's timezone: %s", err)
 		return "", err
 	}
+
 	return timezone, nil
 }
