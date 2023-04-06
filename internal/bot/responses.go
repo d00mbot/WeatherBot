@@ -19,15 +19,13 @@ var locationKeyboard = tgbotapi.NewReplyKeyboard(
 )
 
 func (b *Bot) responseStartCommand(message *tgbotapi.Message) error {
-	logger := b.container.GetLogger()
-
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.Start)
 
 	msg.ReplyMarkup = locationKeyboard
 
 	_, err := b.bot.Send(msg)
 	if err != nil {
-		logger.Errorf("faild to send message to telegram: %s ", err)
+		b.container.GetLogger().Errorf("faild to send message to telegram: %s ", err)
 		return err
 	}
 
@@ -35,13 +33,11 @@ func (b *Bot) responseStartCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) responseHelpCommand(message *tgbotapi.Message) error {
-	logger := b.container.GetLogger()
-
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.Help)
 
 	_, err := b.bot.Send(msg)
 	if err != nil {
-		logger.Errorf("faild to send message to telegram: %s ", err)
+		b.container.GetLogger().Errorf("faild to send message to telegram: %s ", err)
 		return err
 	}
 
@@ -49,8 +45,6 @@ func (b *Bot) responseHelpCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) responseTimeCommand(message *tgbotapi.Message) error {
-	logger := b.container.GetLogger()
-
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.Time)
 	msg.ReplyToMessageID = message.MessageID
 	msg.ReplyMarkup = tgbotapi.ForceReply{
@@ -60,7 +54,7 @@ func (b *Bot) responseTimeCommand(message *tgbotapi.Message) error {
 
 	_, err := b.bot.Send(msg)
 	if err != nil {
-		logger.Errorf("faild to send message to telegram: %s ", err)
+		b.container.GetLogger().Errorf("faild to send message to telegram: %s ", err)
 		return err
 	}
 
@@ -68,13 +62,11 @@ func (b *Bot) responseTimeCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) responseUnknownCommand(message *tgbotapi.Message) error {
-	logger := b.container.GetLogger()
-
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.UnknownCommand)
 
 	_, err := b.bot.Send(msg)
 	if err != nil {
-		logger.Errorf("faild to send message to telegram: %s ", err)
+		b.container.GetLogger().Errorf("faild to send message to telegram: %s ", err)
 		return err
 	}
 
@@ -82,13 +74,11 @@ func (b *Bot) responseUnknownCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) responseDefaultMessage(message *tgbotapi.Message) error {
-	logger := b.container.GetLogger()
-
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.DefaultMessage)
 
 	_, err := b.bot.Send(msg)
 	if err != nil {
-		logger.Errorf("faild to send message to telegram: %s ", err)
+		b.container.GetLogger().Errorf("faild to send message to telegram: %s ", err)
 		return err
 	}
 
@@ -96,14 +86,12 @@ func (b *Bot) responseDefaultMessage(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) responseLocationMessage(userExist bool, message *tgbotapi.Message) error {
-	logger := b.container.GetLogger()
-
 	if !userExist {
 		msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.UserCreated)
 
 		_, err := b.bot.Send(msg)
 		if err != nil {
-			logger.Errorf("faild to send message to telegram: %s ", err)
+			b.container.GetLogger().Errorf("faild to send message to telegram: %s ", err)
 			return err
 		}
 	} else {
@@ -111,7 +99,7 @@ func (b *Bot) responseLocationMessage(userExist bool, message *tgbotapi.Message)
 
 		_, err := b.bot.Send(msg)
 		if err != nil {
-			logger.Errorf("faild to send message to telegram: %s ", err)
+			b.container.GetLogger().Errorf("faild to send message to telegram: %s ", err)
 			return err
 		}
 	}
@@ -120,8 +108,6 @@ func (b *Bot) responseLocationMessage(userExist bool, message *tgbotapi.Message)
 }
 
 func (b *Bot) responseTimeMessage(time string, message *tgbotapi.Message) error {
-	logger := b.container.GetLogger()
-
 	if time == "" {
 		msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.WrongTime)
 		msg.ReplyToMessageID = message.MessageID
@@ -132,7 +118,7 @@ func (b *Bot) responseTimeMessage(time string, message *tgbotapi.Message) error 
 
 		_, err := b.bot.Send(msg)
 		if err != nil {
-			logger.Errorf("faild to send message to telegram: %s ", err)
+			b.container.GetLogger().Errorf("faild to send message to telegram: %s ", err)
 			return err
 		}
 	} else {
@@ -141,7 +127,7 @@ func (b *Bot) responseTimeMessage(time string, message *tgbotapi.Message) error 
 
 		_, err := b.bot.Send(msg)
 		if err != nil {
-			logger.Errorf("faild to send message to telegram: %s ", err)
+			b.container.GetLogger().Errorf("faild to send message to telegram: %s ", err)
 			return err
 		}
 	}
