@@ -3,9 +3,14 @@ version: '3.8'
 services:
   bot:
     environment:
-      - WEATHER_TOKEN=YOUR_WEATHER_API_TOKEN
-      - TELEGRAM_TOKEN=YOUR_TELEGRAM_BOT_TOKEN 
-      - MONGO_URI=mongodb://mongodb:27017/  
+      - WEATHER_TOKEN=YOUR_TOKEN_HERE
+      - TELEGRAM_TOKEN=YOUR_TOKEN_HERE
+       
+      - MONGO_URI=mongodb://mongodb:27017/
+
+      - LOG_LEVEL=PRODUCTION
+
+      - RESPONSES_CONFIG_PATH=/config  
     build:
       context: .
       dockerfile: Dockerfile
