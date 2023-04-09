@@ -108,22 +108,23 @@ func (b *Bot) responseLocationMessage(userExist bool, message *tgbotapi.Message)
 }
 
 func (b *Bot) responseTimeMessage(time string, message *tgbotapi.Message) error {
-	if time == "" {
-		msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.WrongTime)
-		msg.ReplyToMessageID = message.MessageID
-		msg.ReplyMarkup = tgbotapi.ForceReply{
-			ForceReply:            true,
-			InputFieldPlaceholder: placeholderText,
-		}
+	if time != "" {
+		msgText := fmt.Sprintf(b.responses.TimeUpdated, time)
+		msg := tgbotapi.NewMessage(message.Chat.ID, msgText)
 
 		_, err := b.bot.Send(msg)
 		if err != nil {
 			b.container.GetLogger().Errorf("faild to send message to telegram: %s ", err)
 			return err
 		}
+
 	} else {
-		msgText := fmt.Sprintf(b.responses.TimeUpdated, time)
-		msg := tgbotapi.NewMessage(message.Chat.ID, msgText)
+		msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.WrongTime)
+		msg.ReplyToMessageID = message.MessageID
+		msg.ReplyMarkup = tgbotapi.ForceReply{
+			ForceReply:            true,
+			InputFieldPlaceholder: placeholderText,
+		}
 
 		_, err := b.bot.Send(msg)
 		if err != nil {
