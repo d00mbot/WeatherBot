@@ -59,12 +59,10 @@ func openCollection(client *mongo.Client) *mongo.Collection {
 }
 
 func (ms *mongoStorageService) createUser(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message) error {
-	logger := ms.container.GetLogger()
 	col := openCollection(client)
 
 	timezone, err := ms.weatherService.GetTimezone(msg)
 	if err != nil {
-		logger.Errorf("faild to get user's timezone: %s", err)
 		return err
 	}
 
@@ -76,21 +74,19 @@ func (ms *mongoStorageService) createUser(ctx context.Context, client *mongo.Cli
 		Time:      defaultTime,
 	})
 	if err != nil {
-		logger.Errorf("faild to insert new user: %s", err)
+		ms.container.GetLogger().Errorf("faild to insert new user: %s", err)
 		return err
 	}
-	logger.Info("Subscriber successfully created")
+	ms.container.GetLogger().Info("Subscriber successfully created")
 
 	return nil
 }
 
 func (ms *mongoStorageService) updateUser(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message) error {
-	logger := ms.container.GetLogger()
 	col := openCollection(client)
 
 	timezone, err := ms.weatherService.GetTimezone(msg)
 	if err != nil {
-		logger.Errorf("faild to update user's timezone: %s", err)
 		return err
 	}
 
@@ -104,10 +100,10 @@ func (ms *mongoStorageService) updateUser(ctx context.Context, client *mongo.Cli
 
 	_, err = col.UpdateOne(ctx, filter, update)
 	if err != nil {
-		logger.Errorf("faild to update user's location data: %s", err)
+		ms.container.GetLogger().Errorf("faild to update user's location data: %s", err)
 		return err
 	}
-	logger.Info("Subscriber's location data successfully updated")
+	ms.container.GetLogger().Info("Subscriber's location data successfully updated")
 
 	return nil
 }
