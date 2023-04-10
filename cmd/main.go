@@ -45,7 +45,7 @@ func main() {
 
 	botApi, err := tgbotapi.NewBotAPI(container.GetConfig().TelegramToken)
 	if err != nil {
-		logger.Errorf("faild to create new BotAPI instance: %s", err)
+		logger.Errorf("error creating new BotAPI:\n'%v'", err)
 		return
 	}
 	botApi.Debug = true
@@ -53,7 +53,7 @@ func main() {
 	bot := bot.Newbot(botApi, client, userStorage, weatherService, container, responses)
 
 	if err := bot.Start(); err != nil {
-		logger.Errorf("unable to start bot: %s", err)
+		logger.Errorf("unable to start bot:\n'%v'", err)
 		return
 	}
 }

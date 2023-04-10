@@ -74,7 +74,7 @@ func (ms *mongoStorageService) createUser(ctx context.Context, client *mongo.Cli
 		Time:      defaultTime,
 	})
 	if err != nil {
-		ms.container.GetLogger().Errorf("faild to insert new user: %s", err)
+		ms.container.GetLogger().Errorf("error inserting new user:\n'%v'", err)
 		return err
 	}
 	ms.container.GetLogger().Info("Subscriber successfully created")
@@ -100,7 +100,7 @@ func (ms *mongoStorageService) updateUser(ctx context.Context, client *mongo.Cli
 
 	_, err = col.UpdateOne(ctx, filter, update)
 	if err != nil {
-		ms.container.GetLogger().Errorf("faild to update user's location data: %s", err)
+		ms.container.GetLogger().Errorf("error updating user's location data:\n'%v'", err)
 		return err
 	}
 	ms.container.GetLogger().Info("Subscriber's location data successfully updated")
@@ -122,7 +122,7 @@ func (ms *mongoStorageService) checkUserExist(ctx context.Context, client *mongo
 			ms.container.GetLogger().Infof("faild to find matching document: %s", err)
 			return false, err
 		}
-		ms.container.GetLogger().Errorf("faild to decode document into result: %s", err)
+		ms.container.GetLogger().Errorf("error decoding document into result:\n'%v'", err)
 		return false, err
 	}
 
@@ -142,7 +142,7 @@ func (ms *mongoStorageService) updateUserTime(ctx context.Context, client *mongo
 
 	_, err := col.UpdateOne(ctx, filter, upd)
 	if err != nil {
-		ms.container.GetLogger().Errorf("faild to update user's time: %s", err)
+		ms.container.GetLogger().Errorf("error updating user's time:\n'%v'", err)
 		return err
 	}
 	ms.container.GetLogger().Info("Subscriber's time successfully updated")
@@ -165,7 +165,7 @@ func (ms *mongoStorageService) getAllUsers(client *mongo.Client) ([]models.User,
 	}
 
 	if err = usersCursor.All(ctx, &users); err != nil {
-		ms.container.GetLogger().Errorf("faild to decode documents into result: %s", err)
+		ms.container.GetLogger().Errorf("decode documents into result:\n'%v'", err)
 		return nil, err
 	}
 

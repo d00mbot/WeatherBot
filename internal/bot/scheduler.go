@@ -56,7 +56,7 @@ func (b *Bot) sendScheduledMessage(users []models.User) error {
 func (b *Bot) sendForecast(lat float64, lon float64, chatID int64) error {
 	forecast, _, err := b.weatherService.GetForecast(lat, lon)
 	if err != nil {
-		b.container.GetLogger().Errorf("faild to create weather forecast message: %s", err)
+		b.container.GetLogger().Errorf("error creating forecast message: %s", err)
 		return err
 	}
 

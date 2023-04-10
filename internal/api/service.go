@@ -24,7 +24,7 @@ func (fs *forecastService) getWeatherForecast(lat float64, lon float64) (string,
 	logger := fs.container.GetLogger()
 
 	if err := validateGeopoints(lat, lon); err != nil {
-		logger.Errorf("faild to get weather forecast: %s", err)
+		logger.Errorf("faild to validate geopoints: %s", err)
 		return "", "", err
 	}
 
@@ -33,21 +33,21 @@ func (fs *forecastService) getWeatherForecast(lat float64, lon float64) (string,
 		lon,
 		fs.container.GetConfig().WeatherToken))
 	if err != nil {
-		logger.Errorf("faild to get weather api response: %s", err)
+		logger.Errorf("error get weather api response:\n'%v'", err)
 		return "", "", err
 	}
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		logger.Errorf("faild to read weather api response: %s", err)
+		logger.Errorf("error reading weather api response:\n'%v'", err)
 		return "", "", err
 	}
 
 	var resp models.Weather
 
 	if err := json.Unmarshal(body, &resp); err != nil {
-		logger.Errorf("faild to unmarshal weather api response: %s", err)
+		logger.Errorf("unmarshal weather api response:\n'%v'", err)
 		return "", "", err
 	}
 
@@ -87,7 +87,7 @@ func generateForecast(w models.Weather) string {
 func (fs *forecastService) getUserTimezone(message *tgbotapi.Message) (string, error) {
 	_, timezone, err := fs.getWeatherForecast(message.Location.Latitude, message.Location.Longitude)
 	if err != nil {
-		fs.container.GetLogger().Errorf("faild to get user's timezone: %s", err)
+		fs.container.GetLogger().Errorf("unable to get user's timezone: %s", err)
 		return "", err
 	}
 
