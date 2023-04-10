@@ -43,7 +43,7 @@ func (us *userStorageService) Update(ctx context.Context, client *mongo.Client, 
 func (us *userStorageService) CheckExist(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message) (bool, error) {
 	exist, err := us.storage.checkUserExist(ctx, client, msg)
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 	return exist, nil
