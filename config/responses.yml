@@ -8,3 +8,4 @@ responses:
     user_updated: "Location data is successfuly updated.\nIf you want to update notifications time send me /time and follow the instructions."
     unknown_command: "I dont know that command"
     default_message: "To start subscription send me /start"
+    
