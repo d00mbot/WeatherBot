@@ -13,7 +13,7 @@ const (
 	productionLevel  = "PRODUCTION"
 )
 
-func NewBotLogger(cfg *config.BotConfig) (*zap.SugaredLogger, error) {
+func NewBotLogger(cfg *config.Config) (*zap.SugaredLogger, error) {
 	var logger *zap.Logger
 	var err error
 
