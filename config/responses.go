@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func LoadResponses(cfg *BotConfig, logger *zap.SugaredLogger) (*models.Responses, error) {
+func LoadResponses(cfg *Config, logger *zap.SugaredLogger) (*models.Responses, error) {
 	var rsp models.Responses
 
 	if err := setUpViper(cfg); err != nil {
@@ -23,7 +23,7 @@ func LoadResponses(cfg *BotConfig, logger *zap.SugaredLogger) (*models.Responses
 	return &rsp, nil
 }
 
-func setUpViper(cfg *BotConfig) error {
+func setUpViper(cfg *Config) error {
 	viper.AddConfigPath(cfg.ResponsesConfigPath)
 	viper.SetConfigName("responses")
 	viper.SetConfigType("yml")
