@@ -12,26 +12,29 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type Bot struct {
+type bot struct {
 	bot            *tgbotapi.BotAPI
 	client         *mongo.Client
 	storage        database.UserStorageService
 	weatherService api.WeatherService
-	container      container.BotContainer
+	container      container.Container
 	responses      *models.Responses
 }
 
+type Bot interface {
+	Start() error
+}
+
 func Newbot(
-	bot *tgbotapi.BotAPI,
+	botAPI *tgbotapi.BotAPI,
 	client *mongo.Client,
 	storage database.UserStorageService,
 	weatherService api.WeatherService,
-	container container.BotContainer,
+	container container.Container,
 	responses *models.Responses,
-) *Bot {
-
-	return &Bot{
-		bot:            bot,
+) Bot {
+	return &bot{
+		bot:            botAPI,
 		client:         client,
 		storage:        storage,
 		weatherService: weatherService,
@@ -40,10 +43,14 @@ func Newbot(
 	}
 }
 
-func (b *Bot) Start() error {
+func (b *bot) Start() error {
 	b.container.GetLogger().Infof("Authorized on account %s", b.bot.Self.UserName)
 
-	go b.startScheduler()
+	go func() {
+		if err := b.startScheduler(); err != nil {
+			b.container.GetLogger().Errorf("unable to start scheduler:\n%v", err)
+		}
+	}()
 	b.container.GetLogger().Info("Scheduler is started")
 
 	u := tgbotapi.NewUpdate(0)
