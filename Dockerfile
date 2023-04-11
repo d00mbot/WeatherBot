@@ -11,6 +11,7 @@ FROM alpine:latest
 WORKDIR /root/
 
 COPY --from=0 /subscription-bot/.bin/bot .
+COPY --from=0 /subscription-bot/cmd/app /cmd/app
 COPY --from=0 /subscription-bot/config /config
 COPY --from=0 /subscription-bot/container /container
 COPY --from=0 /subscription-bot/logger /logger 
