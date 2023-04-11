@@ -8,15 +8,13 @@ import (
 	"net/http"
 	"subscription-bot/container"
 	"subscription-bot/internal/models"
-
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type forecastService struct {
-	container container.BotContainer
+	container container.Container
 }
 
-func NewForecastService(c container.BotContainer) forecastService {
+func NewForecastService(c container.Container) forecastService {
 	return forecastService{container: c}
 }
 
@@ -33,7 +31,7 @@ func (fs *forecastService) getWeatherForecast(lat float64, lon float64) (string,
 		lon,
 		fs.container.GetConfig().WeatherToken))
 	if err != nil {
-		logger.Errorf("error get weather api response:\n'%v'", err)
+		logger.Errorf("unable to get weather api response:\n'%v'", err)
 		return "", "", err
 	}
 	defer response.Body.Close()
@@ -47,7 +45,7 @@ func (fs *forecastService) getWeatherForecast(lat float64, lon float64) (string,
 	var resp models.Weather
 
 	if err := json.Unmarshal(body, &resp); err != nil {
-		logger.Errorf("unmarshal weather api response:\n'%v'", err)
+		logger.Errorf("faild to unmarshal weather api response:\n'%v'", err)
 		return "", "", err
 	}
 
@@ -56,11 +54,9 @@ func (fs *forecastService) getWeatherForecast(lat float64, lon float64) (string,
 
 func validateGeopoints(lat float64, lon float64) error {
 	if lat == 0.0 {
-		err := errors.New("latitude is empty")
-		return err
+		return errors.New("latitude is empty")
 	} else if lon == 0.0 {
-		err := errors.New("longitude is empty")
-		return err
+		return errors.New("longitude is empty")
 	}
 
 	return nil
@@ -82,14 +78,4 @@ func generateForecast(w models.Weather) string {
 	)
 
 	return forecast
-}
-
-func (fs *forecastService) getUserTimezone(message *tgbotapi.Message) (string, error) {
-	_, timezone, err := fs.getWeatherForecast(message.Location.Latitude, message.Location.Longitude)
-	if err != nil {
-		fs.container.GetLogger().Errorf("unable to get user's timezone: %s", err)
-		return "", err
-	}
-
-	return timezone, nil
 }
