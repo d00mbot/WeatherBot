@@ -21,15 +21,15 @@ const (
 )
 
 type mongoStorageService struct {
-	container      container.BotContainer
+	container      container.Container
 	weatherService api.WeatherService
 }
 
-func NewMongoStorageService(c container.BotContainer, ws api.WeatherService) mongoStorageService {
+func NewMongoStorageService(c container.Container, ws api.WeatherService) mongoStorageService {
 	return mongoStorageService{container: c, weatherService: ws}
 }
 
-func NewMongoClient(c container.BotContainer) (*mongo.Client, error) {
+func NewMongoClient(c container.Container) (*mongo.Client, error) {
 	logger := c.GetLogger()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -61,7 +61,7 @@ func openCollection(client *mongo.Client) *mongo.Collection {
 func (ms *mongoStorageService) createUser(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message) error {
 	col := openCollection(client)
 
-	timezone, err := ms.weatherService.GetTimezone(msg)
+	_, timezone, err := ms.weatherService.GetForecast(msg.Location.Latitude, msg.Location.Longitude)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (ms *mongoStorageService) createUser(ctx context.Context, client *mongo.Cli
 func (ms *mongoStorageService) updateUser(ctx context.Context, client *mongo.Client, msg *tgbotapi.Message) error {
 	col := openCollection(client)
 
-	timezone, err := ms.weatherService.GetTimezone(msg)
+	_, timezone, err := ms.weatherService.GetForecast(msg.Location.Latitude, msg.Location.Longitude)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func (ms *mongoStorageService) getAllUsers(client *mongo.Client) ([]models.User,
 		return nil, err
 	}
 
-	if err = usersCursor.All(ctx, &users); err != nil {
+	if err := usersCursor.All(ctx, &users); err != nil {
 		ms.container.GetLogger().Errorf("decode documents into result:\n'%v'", err)
 		return nil, err
 	}
