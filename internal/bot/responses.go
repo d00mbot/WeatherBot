@@ -18,9 +18,8 @@ var locationKeyboard = tgbotapi.NewReplyKeyboard(
 	),
 )
 
-func (b *Bot) responseStartCommand(message *tgbotapi.Message) error {
+func (b *bot) responseStartCommand(message *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.Start)
-
 	msg.ReplyMarkup = locationKeyboard
 
 	_, err := b.bot.Send(msg)
@@ -32,7 +31,7 @@ func (b *Bot) responseStartCommand(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (b *Bot) responseHelpCommand(message *tgbotapi.Message) error {
+func (b *bot) responseHelpCommand(message *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.Help)
 
 	_, err := b.bot.Send(msg)
@@ -44,7 +43,7 @@ func (b *Bot) responseHelpCommand(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (b *Bot) responseTimeCommand(message *tgbotapi.Message) error {
+func (b *bot) responseTimeCommand(message *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.Time)
 	msg.ReplyToMessageID = message.MessageID
 	msg.ReplyMarkup = tgbotapi.ForceReply{
@@ -61,7 +60,7 @@ func (b *Bot) responseTimeCommand(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (b *Bot) responseUnknownCommand(message *tgbotapi.Message) error {
+func (b *bot) responseUnknownCommand(message *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.UnknownCommand)
 
 	_, err := b.bot.Send(msg)
@@ -73,7 +72,7 @@ func (b *Bot) responseUnknownCommand(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (b *Bot) responseDefaultMessage(message *tgbotapi.Message) error {
+func (b *bot) responseDefaultMessage(message *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.DefaultMessage)
 
 	_, err := b.bot.Send(msg)
@@ -85,7 +84,7 @@ func (b *Bot) responseDefaultMessage(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (b *Bot) responseLocationMessage(userExist bool, message *tgbotapi.Message) error {
+func (b *bot) responseLocationMessage(userExist bool, message *tgbotapi.Message) error {
 	if !userExist {
 		msg := tgbotapi.NewMessage(message.Chat.ID, b.responses.UserCreated)
 
@@ -107,7 +106,7 @@ func (b *Bot) responseLocationMessage(userExist bool, message *tgbotapi.Message)
 	return nil
 }
 
-func (b *Bot) responseTimeMessage(time string, message *tgbotapi.Message) error {
+func (b *bot) responseTimeMessage(time string, message *tgbotapi.Message) error {
 	if time != "" {
 		msgText := fmt.Sprintf(b.responses.TimeUpdated, time)
 		msg := tgbotapi.NewMessage(message.Chat.ID, msgText)
