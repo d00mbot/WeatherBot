@@ -10,27 +10,40 @@ import (
 
 const timeLayout = "15:04"
 
-func (b *Bot) startScheduler() {
+func (b *bot) startScheduler() error {
 	ns := gocron.NewScheduler(time.UTC)
 
-	ns.Every(1).Hour().Do(func() {
-		users, err := b.storage.FindAll(b.client)
-		if err != nil {
-			return
-		}
+	_, err := ns.Every(1).Hour().Do(
+		func() {
+			users, err := b.storage.FindAll(b.client)
+			if err != nil {
+				b.container.GetLogger().Errorf("start scheduler:\n'%v'", err)
+			}
 
-		b.sendScheduledMessage(users)
-	})
+			if err := b.sendScheduledMessage(users); err != nil {
+				b.container.GetLogger().Errorf("start scheduler:\n'%v'", err)
+			}
+		},
+	)
+	if err != nil {
+		b.container.GetLogger().Errorf("start scheduler:\n'%v'", err)
+		return err
+	}
+
 	ns.StartAsync()
+
+	return nil
 }
 
-func (b *Bot) sendScheduledMessage(users []models.User) error {
+func (b *bot) sendScheduledMessage(users []models.User) error {
+	logger := b.container.GetLogger()
+
 	for _, user := range users {
 		u := user
 
 		userLocation, err := time.LoadLocation(u.Timezone)
 		if err != nil {
-			b.container.GetLogger().Errorf("faild to load location: %s", err)
+			logger.Errorf("faild to load location: %s", err)
 			return err
 		}
 
@@ -38,22 +51,29 @@ func (b *Bot) sendScheduledMessage(users []models.User) error {
 
 		userTime, err := time.Parse(timeLayout, u.Time)
 		if err != nil {
-			b.container.GetLogger().Errorf("faild to parse time: %s", err)
+			logger.Errorf("faild to parse time: %s", err)
 			return err
 		}
 
-		ns.Every(1).Day().At(userTime).Do(func() {
-			if err := b.sendForecast(u.Latitude, u.Longitude, u.ChatID); err != nil {
-				return
-			}
-		})
+		_, err = ns.Every(1).Day().At(userTime).Do(
+			func() {
+				if err := b.sendForecast(u.Latitude, u.Longitude, u.ChatID); err != nil {
+					logger.Errorf("unable to send forecast:\n'%v'", err)
+				}
+			},
+		)
+		if err != nil {
+			logger.Errorf("unable to send scheduled message:\n'%v'", err)
+			return err
+		}
+
 		ns.StartAsync()
 	}
 
 	return nil
 }
 
-func (b *Bot) sendForecast(lat float64, lon float64, chatID int64) error {
+func (b *bot) sendForecast(lat float64, lon float64, chatID int64) error {
 	forecast, _, err := b.weatherService.GetForecast(lat, lon)
 	if err != nil {
 		b.container.GetLogger().Errorf("error creating forecast message: %s", err)
