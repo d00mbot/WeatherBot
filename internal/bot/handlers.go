@@ -13,7 +13,7 @@ const (
 	commandTime  = "time"
 )
 
-func (b *Bot) handleCommand(message *tgbotapi.Message) error {
+func (b *bot) handleCommand(message *tgbotapi.Message) error {
 	switch message.Command() {
 	case commandStart:
 		return b.responseStartCommand(message)
@@ -28,7 +28,7 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (b *Bot) handleMessage(ctx context.Context, message *tgbotapi.Message) error {
+func (b *bot) handleMessage(ctx context.Context, message *tgbotapi.Message) error {
 	if message.Location != nil {
 		if err := b.handleLocationMessage(ctx, message); err != nil {
 			return err
@@ -50,7 +50,7 @@ func (b *Bot) handleMessage(ctx context.Context, message *tgbotapi.Message) erro
 	return nil
 }
 
-func (b *Bot) handleLocationMessage(ctx context.Context, message *tgbotapi.Message) error {
+func (b *bot) handleLocationMessage(ctx context.Context, message *tgbotapi.Message) error {
 	userExist, err := b.storage.CheckExist(ctx, b.client, message)
 	if err != nil {
 		return err
@@ -73,7 +73,7 @@ func (b *Bot) handleLocationMessage(ctx context.Context, message *tgbotapi.Messa
 	return nil
 }
 
-func (b *Bot) handleTimeMessage(ctx context.Context, message *tgbotapi.Message) error {
+func (b *bot) handleTimeMessage(ctx context.Context, message *tgbotapi.Message) error {
 	userExist, err := b.storage.CheckExist(ctx, b.client, message)
 	if err != nil {
 		return err
