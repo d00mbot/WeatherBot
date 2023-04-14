@@ -120,7 +120,7 @@ func (ms *mongoStorageService) checkUserExist(ctx context.Context, client *mongo
 	if err := userCursor.Decode(&u); err != nil {
 		if err == mongo.ErrNoDocuments {
 			ms.container.GetLogger().Infof("faild to find matching document: %s", err)
-			return false, err
+			return false, nil
 		}
 		ms.container.GetLogger().Errorf("error decoding document into result:\n'%v'", err)
 		return false, err
