@@ -1,7 +1,7 @@
 package main
 
 import (
-	"subscription-bot/cmd/app"
+	"subscription-bot/app"
 
 	log "github.com/sirupsen/logrus"
 
