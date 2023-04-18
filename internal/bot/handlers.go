@@ -22,7 +22,9 @@ func (b *bot) handleCommand(message *tgbotapi.Message) error {
 	case commandTime:
 		return b.responseTimeCommand(message)
 	default:
-		b.responseUnknownCommand(message)
+		if err := b.responseUnknownCommand(message); err != nil {
+			return err
+		}
 	}
 
 	return nil
