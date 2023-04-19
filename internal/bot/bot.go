@@ -7,9 +7,8 @@ import (
 	"subscription-bot/internal/database"
 	"subscription-bot/internal/models"
 
-	"go.mongodb.org/mongo-driver/mongo"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type bot struct {
