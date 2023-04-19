@@ -3,9 +3,8 @@ package logger
 import (
 	"subscription-bot/config"
 
-	"go.uber.org/zap"
-
 	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 const (
