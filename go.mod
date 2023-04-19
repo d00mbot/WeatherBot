@@ -27,7 +27,7 @@ require (
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
@@ -36,7 +36,6 @@ require (
 require (
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/joho/godotenv v1.5.1
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/montanaflynn/stats v0.7.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
