@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/caarlos0/env"
-	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -16,11 +15,6 @@ type Config struct {
 
 func LoadConfig() (*Config, error) {
 	var cfg Config
-
-	if err := godotenv.Load(); err != nil {
-		log.Errorf("err load env: %s", err)
-		return nil, err
-	}
 
 	if err := env.Parse(&cfg); err != nil {
 		log.Errorf("unable to parse bot config: %s", err)
