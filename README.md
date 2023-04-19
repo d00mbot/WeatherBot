@@ -13,10 +13,15 @@ The weather forecast is carried out due to the geolocation provided by the user 
 The application is run from docker containers, one for the bot and another for the local mongo database.
 In docker-compose.yml set the required environment variables:
   >  `- WEATHER_TOKEN=YOUR_WEATHER_API_TOKEN`
+
   >  `- TELEGRAM_TOKEN=YOUR_TELEGRAM_BOT_TOKEN`
-  >  `- MONGO_URI=mongodb://mongodb:27017/`
-  >  `- LOG_LEVEL=PRODUCTION`
-  >  `- RESPONSES_CONFIG_PATH=/config`  
+
+  >  `- MONGO_URI=YOUR_MONGO_URI (if empty - default value: "mongodb://localhost:27017/")`
+
+  >  `- LOG_LEVEL=PRODUCTION (if empty - default value: "DEBUG")`
+
+  >  `- RESPONSES_CONFIG_PATH=/config (if empty - default value for local usage: "../config")`
+    
 Run the `docker-compose up` command to build and run containers. Bot container runs on port `8080` and mongoDB runs on port `27100`.
 
 Go version: `1.19`
