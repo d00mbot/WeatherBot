@@ -2,10 +2,9 @@ package main
 
 import (
 	"subscription-bot/app"
+	_ "time/tzdata"
 
 	log "github.com/sirupsen/logrus"
-
-	_ "time/tzdata"
 )
 
 func main() {
