@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  bot:
+    environment:
+      - WEATHER_TOKEN=
+      - TELEGRAM_TOKEN=
+       
+      - MONGO_URI=mongodb://mongodb:27017/
+
+      - LOG_LEVEL=PRODUCTION
+
+      - RESPONSES_CONFIG_PATH=/config  
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports: 
+      - "8080:8080"
+    depends_on:
+      - mongodb  
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb 
+    ports:
+      - "27100:27017" 
