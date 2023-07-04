@@ -1,6 +1,6 @@
 # Weather bot
 
-Subsciption bot - is a telegram bot that provides daily weather forecast for its subscribers.
+Weather bot - is a telegram bot that provides daily weather forecast for its subscribers.
 The weather forecast is carried out due to the geolocation provided by the user by subscribing to the bot.
 
 [OpenWeatherMap.org](https://openweathermap.org/api) is used as a data provider.
